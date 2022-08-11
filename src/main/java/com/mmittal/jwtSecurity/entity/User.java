@@ -1,10 +1,11 @@
 package com.mmittal.jwtSecurity.entity;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.util.Collection;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -18,6 +19,15 @@ public class User implements UserDetails {
 
     @Column(nullable = false, length = 64)
     private String password;
+
+    @ManyToMany
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
 
     public User() { }
 
@@ -42,9 +52,26 @@ public class User implements UserDetails {
         this.email = email;
     }
 
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        List<SimpleGrantedAuthority> authorityList = new ArrayList<>();
+        for(Role role: roles){
+            authorityList.add(new SimpleGrantedAuthority(role.getName()));
+        }
+        return authorityList;
     }
 
     public String getPassword() {
